@@ -15,11 +15,11 @@ def main():
     
     # Create pre-training agents - use a variety for better generalization
     agents = [
-        TitforTat(),
-        AlwaysDefect(),  # Important to learn against defectors
-        AlwaysCooperate(),
-        GrimTrigger(),  # Teaches consequences of defection
-        Random()  # Adds unpredictability to training
+        TitforTat()
+        # AlwaysDefect(),  # Important to learn against defectors
+        # AlwaysCooperate(),
+        # GrimTrigger(),  # Teaches consequences of defection
+        # Random()  # Adds unpredictability to training
     ]
     
     # Pre-train using the Gym
@@ -33,11 +33,10 @@ def main():
     
     # Enable online learning for the bot with faster adaptation
     bot.online_learning = True
-    bot.learning_rate = 0.05  # Even higher learning rate during human play
     
     # Create the game with the pre-trained bot
     print("\nStarting game with pre-trained bot (online learning enabled)...")
-    game = Game(human_player, bot, rounds=20)
+    game = Game(human_player, bot, rounds=50)
     
     # Play the game - bot will continue learning from human interactions
     game.play_game()

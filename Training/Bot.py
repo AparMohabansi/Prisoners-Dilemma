@@ -28,15 +28,7 @@ class Bot():
             action = agent_moves[-1]
             
             # Calculate reward based on the prisoner's dilemma payoff matrix
-            reward = 0
-            if action == 1 and opponent_moves[-1] == 1:  # Both cooperate
-                reward = 3
-            elif action == 1 and opponent_moves[-1] == 0:  # You cooperate, opponent defects
-                reward = 0
-            elif action == 0 and opponent_moves[-1] == 1:  # You defect, opponent cooperates
-                reward = 5
-            else:  # Both defect
-                reward = 1
+            reward = SCORE_GUIDE[(action, opponent_moves[-1])][0]
                 
             # Store the experience
             self.memory.append((prev_state, action, reward))
@@ -45,17 +37,27 @@ class Bot():
             if self.online_learning and len(self.memory) >= 5:
                 self.learn_from_memory()
                 
+        # self.print_model_parameters()
         # Get next action (using the predict method which doesn't create computational graphs)
         return self.model.predict(agent_moves, opponent_moves, self)
     
     def learn_from_memory(self):
-        # Only keep the most recent experiences
+        # Only keep the most recent experiences with emphasis on newer ones
         if len(self.memory) > 100:
-            self.memory = self.memory[-100:]
+            self.memory = self.memory[-50:]  # Keep fewer, more recent experiences
             
-        # Sample a batch from memory
-        batch_size = min(len(self.memory), 32)
-        batch = random.sample(self.memory, batch_size)
+        # Sample a batch from memory with higher probability for recent experiences
+        batch_size = min(len(self.memory), 16)  # Smaller batch for quicker adaptation
+        recent_weight = 0.7  # Weight towards recent experiences
+        
+        # Weighted sampling (recent experiences have higher probability)
+        if len(self.memory) > batch_size:
+            recent_idx = max(int(batch_size * recent_weight), 1)
+            recent_batch = self.memory[-recent_idx:]
+            old_batch = random.sample(self.memory[:-recent_idx], batch_size - recent_idx)
+            batch = recent_batch + old_batch
+        else:
+            batch = self.memory
         
         # Prepare batch data
         states = []
@@ -90,6 +92,14 @@ class Bot():
         # Backprop
         batch_loss.backward()
         self.model.optimizer.step()
+    
+    def print_model_parameters(self):
+        for name, param in self.model.named_parameters():
+            if param.requires_grad:
+                print(f"Layer: {name}")
+                print(f"Weights/Bias: {param.data}")
+                print(f"Shape: {param.shape}")
+                print("-" * 30)
 
 class RNNAgent(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -98,7 +108,7 @@ class RNNAgent(nn.Module):
         self.rnn1 = nn.RNN(input_size, hidden_size, batch_first=True)
         self.rnn2 = nn.RNN(hidden_size, hidden_size, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.05)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.2)
 
     def forward(self, x, hidden):
         if x.dim() == 2:
