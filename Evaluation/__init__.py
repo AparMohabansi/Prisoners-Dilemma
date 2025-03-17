@@ -1,7 +1,7 @@
 package_name = "Evaluation"
 
 
-__all__ = ["test_tournament", "Tournment"]
+__all__ = ["Tournment", "Game"]
 
-from .test_tournament import test_tournament
 from .Tournment import Tournament
+from .Game import Game

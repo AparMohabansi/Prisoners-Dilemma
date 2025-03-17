@@ -1,9 +1,8 @@
-from Agent import Agent
-from typing import override
+from ..Agent import Agent
 import random
+import torch
 
 
 class Random(Agent):
-    @override
     def next_move(self, agent_moves, opponent_moves):
-        return random.choice([0, 1])
+        return random.choice([torch.tensor([0]), torch.tensor([1])])

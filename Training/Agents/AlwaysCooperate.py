@@ -1,7 +1,6 @@
-from Agent import Agent
-from typing import override
+from ..Agent import Agent
+import torch
 
 class AlwaysCooperate(Agent):
-    @override
     def next_move(self, agent_moves, opponent_moves):
-        return 1
+        return torch.tensor([1])

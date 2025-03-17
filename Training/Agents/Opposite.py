@@ -1,10 +1,9 @@
-from Agent import Agent
-from typing import override
+from ..Agent import Agent
+import torch
 
 class Opposite(Agent):
-    @override
     def next_move(self, agent_moves, opponent_moves):
-        if opponent_moves[-1] == 0:
-            return 1
+        if len(opponent_moves)>0 and opponent_moves[-1] == 0:
+            return torch.tensor([1])
         else:
-            return 0
+            return torch.tensor([0])

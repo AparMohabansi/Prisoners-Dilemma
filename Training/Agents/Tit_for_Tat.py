@@ -1,7 +1,9 @@
-from Agent import Agent
-from typing import override
+from ..Agent import Agent
+import torch
 
 class TitforTat(Agent):
-    @override
     def next_move(self, agent_moves, opponent_moves):
-        return opponent_moves[-1] if len(opponent_moves) > 0 else 0
+        if len(opponent_moves) > 0:
+            return opponent_moves[-1]
+        else:
+            return torch.tensor([1])  # Cooperate on the first round
