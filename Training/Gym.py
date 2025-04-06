@@ -17,11 +17,19 @@ class Gym():
         model = self.bot.model
         optimizer = optim.Adam(model.parameters(), lr=self.bot.learning_rate)
 
-        epsilon = 0.1  # Exploration rate
+        epsilon = self.bot.epsilon
 
         for episode in range(self.bot.num_episodes):
             for agent in self.agents:
-                self.bot.hidden = torch.zeros(1, 1, self.bot.hidden_size)  # Reset hidden state
+                #self.bot.hidden = torch.zeros(1, 1, self.bot.hidden_size)  # Reset hidden state
+                if self.bot.model_type == "LSTM":
+                    self.bot.hidden = (
+                        torch.zeros(1, 1, self.bot.hidden_size),  # h0
+                        torch.zeros(1, 1, self.bot.hidden_size)   # c0
+                    )
+                else:
+                    self.bot.hidden = torch.zeros(1, 1, self.bot.hidden_size)  # Reset hidden state
+
                 log_probs = []
                 rewards = []
                 model_actions = []

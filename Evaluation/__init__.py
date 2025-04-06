@@ -1,7 +1,8 @@
 package_name = "Evaluation"
 
 
-__all__ = ["Tournment", "Game"]
+__all__ = ["Tournment", "Game", "Factory"]
 
-from .Tournment import Tournament
+from .Tournament import Tournament
 from .Game import Game
+from .Factory import Factory
