@@ -1,9 +1,10 @@
 from Training.Agent import Agent
+from Training.Bot import Bot
 from Training.config import SCORE_GUIDE
 from typing import List
 
 class Tournament:
-    def __init__(self, agents: List[Agent], bots: List[Agent], num_rounds: int = 5, num_games: int = 1):
+    def __init__(self, agents: List[Agent], bots: List[Bot], num_rounds: int = 5, num_games: int = 1):
         self.agents = agents
         self.bots = bots
         self.num_rounds = num_rounds

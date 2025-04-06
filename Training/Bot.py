@@ -7,18 +7,28 @@ from Training.config import SCORE_GUIDE
 import random
 
 class Bot():
-    def __init__(self, name="RNN Bot"):
+    def __init__(self, name="RNN Bot", output: bool = True, verbose: bool = False):
+        # Constants
         self.name = name
         self.input_size = 2  # [self_action, opponent_moves]
         self.hidden_size = 16
         self.output_size = 2  # [Cooperate, Defect]
-        self.learning_rate = 0.01
+
+        # Parameters
+        self.learning_rate = 0.01  # Learning rate during gym training
         self.num_episodes = 200  # Number of rounds
+
+        # Data structures
         self.model = RNNAgent(self.input_size, self.hidden_size, self.output_size)
         self.hidden = torch.zeros(1, 1, self.hidden_size)  # Initialize hidden state
         self.state = torch.tensor([[1, 1]], dtype=torch.float32)  # Initial state
+        self.trained_state = None  # For storing the post-training weights
         self.memory = []  # For storing experiences
+
+        # Flags
         self.online_learning = True  # Flag to enable/disable learning
+        self.output = output  # Flag for debug output
+        self.verbose = verbose  # Flag for verbose output
     
     def next_move(self, agent_moves: List[int], opponent_moves: List[int]) -> Literal[0, 1]:
         # Store experience for learning
@@ -38,61 +48,99 @@ class Bot():
                 self.learn_from_memory()
                 
         # self.print_model_parameters()
+        # Calculate action probabilities based on the current state
+        if self.output:
+            with torch.no_grad():
+                action_probs, _ = self.model(self.state.unsqueeze(0), self.hidden)
+                print(f"Action probabilities: {action_probs.squeeze().tolist()}")
         # Get next action (using the predict method which doesn't create computational graphs)
         return self.model.predict(agent_moves, opponent_moves, self)
     
     def learn_from_memory(self):
-        # Only keep the most recent experiences with emphasis on newer ones
-        if len(self.memory) > 100:
-            self.memory = self.memory[-50:]  # Keep fewer, more recent experiences
-            
-        # Sample a batch from memory with higher probability for recent experiences
-        batch_size = min(len(self.memory), 16)  # Smaller batch for quicker adaptation
-        recent_weight = 0.7  # Weight towards recent experiences
+        """Learn from recent experiences without explicit heuristics"""        
+        # Use recent experiences to adapt to current opponent
+        experiences = self.memory[-15:]
         
-        # Weighted sampling (recent experiences have higher probability)
-        if len(self.memory) > batch_size:
-            recent_idx = max(int(batch_size * recent_weight), 1)
-            recent_batch = self.memory[-recent_idx:]
-            old_batch = random.sample(self.memory[:-recent_idx], batch_size - recent_idx)
-            batch = recent_batch + old_batch
-        else:
-            batch = self.memory
+        # Unpack experiences
+        prev_states = [exp[0] for exp in experiences]
+        actions = [exp[1] for exp in experiences]
+        rewards = [exp[2] for exp in experiences]
         
-        # Prepare batch data
-        states = []
-        actions = []
-        rewards = []
+        # Create optimizer with consistent learning rate
+        optimizer = optim.Adam(self.model.parameters(), lr=0.1)
         
-        for state, action, reward in batch:
-            states.append(torch.tensor([state], dtype=torch.float32))
-            actions.append(action)
-            rewards.append(reward)
-        
-        # Calculate discounted returns
-        discounted_returns = []
-        G = 0
+        # Calculate returns with reasonable discount factor
         gamma = 0.9
-        for r in reversed(rewards):
-            G = r + gamma * G
-            discounted_returns.insert(0, G)
-            
-        # Learn from this batch
-        self.model.optimizer.zero_grad()
-        batch_loss = 0
+        returns = []
+        R = 0
+        for reward in reversed(rewards):
+            R = reward + gamma * R
+            returns.insert(0, R)
+        
+        # Convert to tensors
+        returns_tensor = torch.tensor(returns, dtype=torch.float32)
+        
+        # Normalize returns for stable learning
+        if len(returns) > 1 and returns_tensor.std() > 0:
+            returns_tensor = (returns_tensor - returns_tensor.mean()) / (returns_tensor.std() + 1e-5)
+        
+        # Reset hidden state
         hidden = torch.zeros(1, 1, self.hidden_size)
         
-        for i, (state, action, return_val) in enumerate(zip(states, actions, discounted_returns)):
-            # Forward pass with fresh computation graph
-            action_probs, hidden = self.model(state.unsqueeze(0), hidden)
-            action_dist = torch.distributions.Categorical(action_probs)
-            log_prob = action_dist.log_prob(torch.tensor(action))
-            batch_loss = batch_loss - log_prob * return_val
+        # Compute log probs
+        log_probs = []
+        entropy = 0
         
-        # Backprop
-        batch_loss.backward()
-        self.model.optimizer.step()
+        for i in range(len(prev_states)):
+            state = torch.tensor([prev_states[i]], dtype=torch.float32).unsqueeze(0)
+            action_probs, hidden = self.model(state, hidden)
+            dist = torch.distributions.Categorical(action_probs.squeeze())
+            
+            # Convert action to tensor if needed
+            action_tensor = actions[i] if isinstance(actions[i], torch.Tensor) else torch.tensor(actions[i], dtype=torch.long)
+            log_prob = dist.log_prob(action_tensor)
+            log_probs.append(log_prob)
+            
+            # Add small entropy bonus to encourage exploration
+            entropy += dist.entropy()
+        
+        # Stack log probs
+        log_probs = torch.stack(log_probs)
+        
+        # Policy gradient loss with small entropy regularization
+        policy_loss = -torch.sum(log_probs * returns_tensor) - 0.01 * entropy
+        
+        # Perform optimization
+        optimizer.zero_grad()
+        policy_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+        optimizer.step()
+        
+        # Output debug information
+        if self.verbose:
+            print(f"Online learning from {len(experiences)} experiences")
+            print(f"Average reward: {sum(rewards) / len(rewards):.2f}")
+            print(f"Policy loss: {policy_loss.item():.4f}")
+        elif self.output:
+            print(f"Learning from {len(experiences)} recent moves")
+        
+        # Keep only recent memory to focus on current opponent
+        self.memory = self.memory[-20:]
+        
     
+    def save_trained_state(self):
+        """Save the current model weights as the reference post-training state"""
+        self.trained_state = {key: val.clone() for key, val in self.model.state_dict().items()}
+
+    def reset_to_trained_state(self):
+        """Reset model weights to the saved post-training state"""
+        if self.trained_state is not None:
+            self.model.load_state_dict(self.trained_state)
+            # Also reset the hidden state
+            self.hidden = torch.zeros(1, 1, self.hidden_size)
+        else:
+            raise ValueError("No trained state found. Please train the model first.")
+
     def print_model_parameters(self):
         for name, param in self.model.named_parameters():
             if param.requires_grad:

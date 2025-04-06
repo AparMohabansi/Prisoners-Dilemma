@@ -87,5 +87,6 @@ class Gym():
                     # print(f"Model Actions: {[action.item() for action in model_actions]}")
                     # print(f"Agent Actions: {[action.item() for action in agent_actions]}")
                     #print(f"Rewards: {rewards}")
+        self.bot.save_trained_state()  # Save the model state after training so it can be reset after each game
 
         

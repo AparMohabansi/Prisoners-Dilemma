@@ -8,7 +8,7 @@ from Evaluation.Game import Game
 
 def main():
     # Create the bot
-    bot = Bot("Learning Bot")
+    bot = Bot("Learning Bot", output=True, verbose=True)
     bot.hidden_size = 16
     bot.learning_rate = 0.03  # Increased learning rate for faster adaptation
     bot.num_episodes = 200  # Pre-training episodes
