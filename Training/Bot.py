@@ -7,14 +7,19 @@ from Training.config import SCORE_GUIDE
 import random
 
 class Bot():
-    def __init__(self, name="RNN Bot", output: bool = True, verbose: bool = False, model_type = "RNN"):
+    def __init__(self, 
+                 name="RNN Bot", 
+                 model_type: Literal["RNN", "LSTM"] = "RNN", 
+                 hidden_size: int = 16,
+                 output: bool = True, 
+                 verbose: bool = False):
         # Constants
         self.name = name
         self.input_size = 2  # [self_action, opponent_moves]
         self.output_size = 2  # [Cooperate, Defect]
 
         # Hyperparameters for the model
-        self.hidden_size = 16  # Hidden layer size
+        self.hidden_size = hidden_size  # Hidden layer size
 
         # Hyperparameters for training
         self.learning_rate = 0.01  # Learning rate during gym training

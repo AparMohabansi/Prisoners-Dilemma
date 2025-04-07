@@ -9,9 +9,10 @@ from torch.optim.lr_scheduler import StepLR
 
 
 class Gym():
-    def __init__(self, agents: List[Agent], bot: Bot):
+    def __init__(self, agents: List[Agent], bot: Bot, output: bool = False):
         self.agents = agents
         self.bot = bot
+        self.output = output
 
     def RNN_train(self):
         model = self.bot.model
@@ -90,7 +91,7 @@ class Gym():
                 policy_loss.backward()
                 optimizer.step()
 
-                if episode % 20 == 0:
+                if self.output and episode % 1 == 0:
                     print(f"""Episode {episode}, Cumulative Reward: {int(sum(rewards))}, Avg Model Action: {round(float(sum(model_actions)/len(model_actions)), 2)}, Avg Agent Action: {round(float(sum(agent_actions)/len(agent_actions)), 2)}""")
                     # print(f"Model Actions: {[action.item() for action in model_actions]}")
                     # print(f"Agent Actions: {[action.item() for action in agent_actions]}")

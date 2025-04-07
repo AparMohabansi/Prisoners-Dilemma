@@ -1,24 +1,31 @@
 from Training.Bot import Bot
 from Evaluation.Game import Game
 from Training.Gym import Gym
-from Training.Agents import TitforTat, AlwaysDefect, AlwaysCooperate, GrimTrigger, Random, Opposite
+from Training.Agents import *
 import random
+import math
 from tqdm import tqdm
 
+def loguniform(low, high):
+    """Sample from a log-uniform distribution"""
+    return math.exp(random.uniform(math.log(low), math.log(high)))
+
 class Factory:
-    def __init__(self):
+    def __init__(self, output: bool = False):
         self.bots = []
+        self.output = output
         
     def create_bots(self, num_bots, 
-                   hidden_size_range=(8, 32),
-                   learning_rate_range=(0.005, 0.05),
-                   num_episodes_range=(20, 50),
-                   epsilon_range=(0.05, 0.2),
-                   learning_rate_online_range=(0.05, 0.2),
-                   memory_size_range=(10, 20),
-                   entropy_coef_range=(0.001, 0.01),
-                   model_type="LSTM",
-                   verbose=False):
+                    hidden_size_range=(8, 32),
+                    learning_rate_range=(0.005, 0.05),
+                    num_episodes_range=(20, 50),
+                    epsilon_range=(0.05, 0.2),
+                    learning_rate_online_range=(0.05, 0.2),
+                    memory_size_range=(10, 20),
+                    entropy_coef_range=(0.001, 0.01),
+                    model_types=["RNN", "LSTM"],
+                    min_agents=3,  # Minimum number of agents to train against
+                    max_agents=8): # Maximum number of agents to train against
         """
         Create bots with randomized parameters within specified ranges
         
@@ -31,8 +38,7 @@ class Factory:
             learning_rate_online_range: Range for online learning rate (min, max)
             memory_size_range: Range for memory size (min, max)
             entropy_coef_range: Range for entropy coefficient (min, max)
-            model_type: Type of model to use ("LSTM" or "GRU")
-            verbose: Whether to print detailed training information
+            model_type: Type of model to use ("RNN" or "LSTM")
         
         Returns:
             List of trained bots
@@ -42,30 +48,44 @@ class Factory:
         # Create progress bar for bot creation and training
         print(f"Creating and training {num_bots} bots with randomized parameters...")
         progress_bar = tqdm(total=num_bots, desc="Bot Training Progress")
+
+        # Create training agents
+        agent_pool = [
+            TitforTat(),
+            AlwaysDefect(),
+            AlwaysCooperate(),
+            GrimTrigger(),
+            Opposite(),
+            Random(),
+            TitForTwoTats(),
+            TwoTitsForTat(),
+            Pavlov(),
+            MajorityRule()
+        ]
         
         for i in range(num_bots):
             # Create bot with randomized name
             bot_name = f"Bot_{i+1}"
-            bot = Bot(bot_name, output=False, verbose=verbose, model_type=model_type)
+            model_type = random.choice(model_types)
+            hidden_size = random.randint(hidden_size_range[0], hidden_size_range[1])
+            bot = Bot(bot_name, hidden_size=hidden_size, output=False, verbose=False, model_type=model_type)
             
-            # Set randomized parameters
-            bot.hidden_size = random.randint(hidden_size_range[0], hidden_size_range[1])
-            bot.learning_rate = random.uniform(learning_rate_range[0], learning_rate_range[1])
+            # Set randomized parameters using loguniform where appropriate
+            bot.learning_rate = loguniform(learning_rate_range[0], learning_rate_range[1])
             bot.num_episodes = random.randint(num_episodes_range[0], num_episodes_range[1])
             bot.epsilon = random.uniform(epsilon_range[0], epsilon_range[1])
-            bot.learning_rate_online = random.uniform(learning_rate_online_range[0], learning_rate_online_range[1])
+            bot.learning_rate_online = loguniform(learning_rate_online_range[0], learning_rate_online_range[1])
             bot.memory_size = random.randint(memory_size_range[0], memory_size_range[1])
-            bot.entropy_coef = random.uniform(entropy_coef_range[0], entropy_coef_range[1])
+            bot.entropy_coef = loguniform(entropy_coef_range[0], entropy_coef_range[1])
             
-            # Create training agents
-            agents = [
-                TitforTat(),
-                AlwaysDefect(),
-                AlwaysCooperate(),
-                GrimTrigger(),
-                Opposite(),
-                Random()
-            ]
+            # Choose a random number of agents from the pool
+            num_agents = random.randint(min_agents, min(max_agents, len(agent_pool)))
+            agents = random.sample(agent_pool, num_agents)
+            
+            if self.output:
+                print(f"\nTraining {bot_name} against {num_agents} agents:")
+                for agent in agents:
+                    print(f"  - {agent.__class__.__name__}")
             
             # Train bot using Gym
             gym = Gym(agents, bot)
@@ -75,7 +95,7 @@ class Factory:
             self.bots.append(bot)
             
             # Log bot parameters if verbose
-            if verbose:
+            if self.output:
                 print(f"\nBot {i+1} Parameters:")
                 print(f"  Hidden Size: {bot.hidden_size}")
                 print(f"  Learning Rate: {bot.learning_rate:.6f}")
