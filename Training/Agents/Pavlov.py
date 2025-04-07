@@ -16,6 +16,6 @@ class Pavlov:
         last_opponent_move = opponent_moves[-1]
         
         if last_agent_move == last_opponent_move:  # Both cooperated or both defected
-            return torch.tensor(last_agent_move)  # Repeat last move
+            return last_agent_move.clone().detach()  # Repeat last move
         else:
-            return torch.tensor(1 - last_agent_move)  # Change strategy
+            return (1 - last_agent_move).clone().detach()  # Change strategy

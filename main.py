@@ -9,27 +9,27 @@ from Evaluation.Factory import Factory
 
 
 def main():
-    # Create the bot
-    bot = Bot("Learning Bot", output=True, verbose=True, model_type="RNN")
-    bot.hidden_size = 16
-    bot.learning_rate = 0.03  # Increased learning rate for faster adaptation
-    bot.num_episodes = 20  # Pre-training episodes
+    # # Create the bot
+    # bot = Bot("Learning Bot", output=True, verbose=True, model_type="RNN")
+    # bot.hidden_size = 16
+    # bot.learning_rate = 0.03  # Increased learning rate for faster adaptation
+    # bot.num_episodes = 20  # Pre-training episodes
     
-    # Create pre-training agents - use a variety for better generalization
-    agents = [
-        #TitforTat()
-        #AlwaysDefect(),  # Important to learn against defectors
-        #AlwaysCooperate() #,
-        #GrimTrigger()  # Teaches consequences of defection
-        #Opposite()
-        Random()  # Adds unpredictability to training
-    ]
+    # # Create pre-training agents - use a variety for better generalization
+    # agents = [
+    #     #TitforTat()
+    #     #AlwaysDefect(),  # Important to learn against defectors
+    #     #AlwaysCooperate() #,
+    #     #GrimTrigger()  # Teaches consequences of defection
+    #     #Opposite()
+    #     Random()  # Adds unpredictability to training
+    # ]
     
-    # Pre-train using the Gym
-    print("Pre-training bot in Gym...")
-    gym = Gym(agents, bot, output=True)
-    gym.RNN_train()
-    print("Pre-training complete!")
+    # # Pre-train using the Gym
+    # print("Pre-training bot in Gym...")
+    # gym = Gym(agents, bot, output=True)
+    # gym.RNN_train()
+    # print("Pre-training complete!")
     
     # # Create a human player
     # human_player = HumanPlayer()
@@ -45,13 +45,13 @@ def main():
     # game.play_game()
     # game.print_scores()
 
-    # factory = Factory(output=True)
-    # bots = factory.create_bots(num_bots=10)
+    output = False
+    factory = Factory(output=output)
+    bots = factory.create_bots(num_bots=200)
 
-    # tournament = Tournament(bots = bots, num_rounds = 50, num_games = 4)
-    # tournament.run_tournament()
-    # winner = tournament.get_winner()
-    # print(f"The winner is: {winner}")
+    tournament = Tournament(bots = bots, num_rounds = 200, num_games = 10)
+    tournament.run_tournament()
+    tournament.get_winners(10, print_winners=True)
 
 
 if __name__ == "__main__":

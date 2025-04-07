@@ -10,7 +10,6 @@ class Tournament:
         self.num_rounds = num_rounds  # Number of rounds in each game
         self.num_games = num_games  # Each bot plays this many games
         self.scores = {bot: 0 for bot in bots}
-        self.noise = 0.0
 
     def play_match(self, bot1: Bot, bot2: Bot):
         game = Game(bot1, bot2, rounds=self.num_rounds)
@@ -82,32 +81,20 @@ class Tournament:
         # Print summary
         print("\nTournament completed!")
         print(f"Matches played: {matches_played}")
-        print(f"Scores: {self.scores}")
 
     def get_winner(self):
         return max(self.scores.values())
+    
+    def get_winners(self, num_winners: int = 1, print_winners: bool = True):
+        if print_winners:
+            print("Tournament winners:")
+            for bot, score in sorted(self.scores.items(), key=lambda item: item[1], reverse=True)[:num_winners]:
+                print(f"{bot.name}: {score}")
+        else:
+            return self.scores.values().sort(reverse=True)[:num_winners]
 
     def set_rounds(self, num_rounds: int):
         self.num_rounds = num_rounds
 
     def set_noise(self, noise: float):
         self.noise = noise
-
-# Example usage
-if __name__ == "__main__":
-    from Training.Agent import Agent
-
-
-    class RandomAgent(Agent):
-        def next_move(self, agent_moves, opponent_moves):
-            import random
-            return random.choice([0, 1])
-
-    agents = [RandomAgent() for _ in range(4)]
-    bots = [RandomAgent() for _ in range(2)]
-    tournament = Tournament(agents, bots)
-    tournament.set_rounds(10)
-    tournament.set_noise(0.1)
-    tournament.run_tournament()
-    winner = tournament.get_winner()
-    print(f"The winner is: {winner}")
