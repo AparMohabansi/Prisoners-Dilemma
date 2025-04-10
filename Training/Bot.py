@@ -2,9 +2,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
-from typing import List, Literal, Tuple
+from typing import List, Literal, Tuple, Dict, Any
 from Training.config import SCORE_GUIDE
 import random
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 class Bot():
     def __init__(self, 
@@ -44,7 +48,32 @@ class Bot():
             self.model = RNNAgent(self.input_size, self.hidden_size, self.output_size)
             self.hidden = torch.zeros(1, 1, self.hidden_size)
 
-
+        # Statistics tracking
+        self.stats = {
+            # Strategy Analysis
+            'total_moves': 0,
+            'cooperation_count': 0,
+            'times_defected_against': 0,
+            'retaliation_count': 0,
+            'forgiveness_opportunities': 0,
+            'moves_to_forgiveness': [],
+            'was_defected_last': False,
+            'retaliating': False,
+            'moves_since_defected': 0,
+            
+            # Performance Metrics
+            'games_played': 0,
+            'games_won': 0,
+            'games_lost': 0,
+            'games_draw': 0,
+            'total_score': 0,
+            'scores_per_game': [],
+            'points_per_round': [],
+            
+            # Current game tracking
+            'current_game_score': 0,
+            'current_game_rounds': 0
+        }
 
         # Data structures
         self.state = torch.tensor([[1, 1]], dtype=torch.float32)  # Initial state
@@ -59,13 +88,51 @@ class Bot():
     def next_move(self, agent_moves: List[int], opponent_moves: List[int]) -> Literal[0, 1]:
         # Store experience for learning
         if len(agent_moves) > 0 and len(opponent_moves) > 0:
-            # Previous state, action and reward
+            # Update statistics
+            self.stats['total_moves'] += 1
+            
+            # Previous action analysis
+            last_action = agent_moves[-1]
+            last_opponent_action = opponent_moves[-1]
+            
+            # Update cooperation count
+            if last_action == 1:  # 1 is cooperate
+                self.stats['cooperation_count'] += 1
+            
+            # Update retaliation tracking
+            if last_opponent_action == 0:  # Opponent defected
+                self.stats['times_defected_against'] += 1
+                
+                # Track if we retaliated - defection (0) after being defected against
+                if last_action == 0 and self.stats['was_defected_last']:
+                    self.stats['retaliation_count'] += 1
+                    self.stats['retaliating'] = True
+                
+                self.stats['was_defected_last'] = True
+                self.stats['moves_since_defected'] = 0
+            else:
+                self.stats['was_defected_last'] = False
+                
+            # Track forgiveness - cooperation (1) after retaliating
+            if self.stats['retaliating'] and last_action == 1:  # We cooperated after retaliating
+                self.stats['forgiveness_opportunities'] += 1
+                self.stats['moves_to_forgiveness'].append(self.stats['moves_since_defected'])
+                self.stats['retaliating'] = False
+            
+            if self.stats['was_defected_last'] or self.stats['retaliating']:
+                self.stats['moves_since_defected'] += 1
+            
+            # Calculate and store point earned for this round
+            reward = SCORE_GUIDE[(last_action, last_opponent_action)][0]
+            self.stats['current_game_score'] += reward
+            self.stats['current_game_rounds'] += 1
+            self.stats['points_per_round'].append(reward)
+            self.stats['total_score'] += reward
+            
+            # Previous state, action and reward for learning
             prev_state = [agent_moves[-2], opponent_moves[-2]] if len(agent_moves) > 1 else [1, 1]
             action = agent_moves[-1]
             
-            # Calculate reward based on the prisoner's dilemma payoff matrix
-            reward = SCORE_GUIDE[(action, opponent_moves[-1])][0]
-                
             # Store the experience
             self.memory.append((prev_state, action, reward))
             
@@ -73,15 +140,82 @@ class Bot():
             if self.online_learning and len(self.memory) >= 3:
                 self.learn_from_memory()
                 
-        # self.print_model_parameters()
         # Calculate action probabilities based on the current state
         if self.output:
             with torch.no_grad():
                 action_probs, _ = self.model(self.state.unsqueeze(0), self.hidden)
                 print(f"Action probabilities: {action_probs.squeeze().tolist()}")
+                
         # Get next action (using the predict method which doesn't create computational graphs)
-        return self.model.predict(agent_moves, opponent_moves, self)
+        action = self.model.predict(agent_moves, opponent_moves, self)
+        
+        return action
+        
+    def start_new_game(self):
+        """Record the start of a new game with an opponent"""
+        # First, wrap up the previous game if there was one
+        if self.stats['current_game_rounds'] > 0:
+            self.end_game(None)  # None means we don't know the result yet
+            
+        self.stats['current_game_score'] = 0
+        self.stats['current_game_rounds'] = 0
+        
     
+    def end_game(self, result=None):
+        """Record the end of a game and its result"""
+        if self.stats['current_game_rounds'] > 0:
+            self.stats['games_played'] += 1
+            
+            # Store the total score for this game instead of the average
+            self.stats['scores_per_game'].append(self.stats['current_game_score'])
+            
+            # Record game result if provided
+            if result is not None:
+                if result == 'win':
+                    self.stats['games_won'] += 1
+                elif result == 'loss':
+                    self.stats['games_lost'] += 1
+                elif result == 'draw':
+                    self.stats['games_draw'] += 1
+    
+    def get_statistics(self):
+        """Calculate and return all statistics"""
+        # Avoid division by zero
+        total_moves = max(1, self.stats['total_moves'])
+        times_defected = max(1, self.stats['times_defected_against'])
+        forgiveness_opps = max(1, self.stats['forgiveness_opportunities'])
+        games_played = max(1, self.stats['games_played'])
+        
+        # Calculate derived statistics
+        stats = {
+            # Strategy Analysis
+            'cooperation_rate': self.stats['cooperation_count'] / total_moves,
+            'retaliation_rate': self.stats['retaliation_count'] / times_defected,
+            'forgiveness_rate': 0,  # Default value
+            
+            # Performance Metrics
+            'win_rate': self.stats['games_won'] / games_played,
+            'loss_rate': self.stats['games_lost'] / games_played,
+            'draw_rate': self.stats['games_draw'] / games_played,
+            'avg_score_per_game': np.mean(self.stats['scores_per_game']) if self.stats['scores_per_game'] else 0,
+            'avg_points_per_round': np.mean(self.stats['points_per_round']) if self.stats['points_per_round'] else 0,
+            'score_variance': np.var(self.stats['scores_per_game']) if len(self.stats['scores_per_game']) > 1 else 0,
+            
+            # Model info
+            'model_type': self.model_type,
+            'hidden_size': self.hidden_size,
+            'training_agents': len(self.training_agents),
+            
+            # Raw stats for plotting
+            'raw': self.stats
+        }
+        
+        # Calculate forgiveness rate if we have data
+        if self.stats['moves_to_forgiveness']:
+            stats['forgiveness_rate'] = 1 / (np.mean(self.stats['moves_to_forgiveness']) + 1)  # +1 to avoid infinity
+        
+        return stats
+
     def learn_from_memory(self):
         """
         Learn from recent experiences without explicit heuristics
@@ -113,7 +247,6 @@ class Bot():
             returns_tensor = (returns_tensor - returns_tensor.mean()) / (returns_tensor.std() + 1e-5)
         
         # Reset hidden state
-        #hidden = torch.zeros(1, 1, self.hidden_size)
         if self.model_type == "LSTM":
             hidden = (
                 torch.zeros(1, 1, self.hidden_size),
@@ -122,7 +255,6 @@ class Bot():
         else:
             hidden = torch.zeros(1, 1, self.hidden_size)
 
-        
         # Compute log probs
         log_probs = []
         entropy = 0
@@ -170,13 +302,6 @@ class Bot():
 
     def reset_to_trained_state(self):
         """Reset model weights to the saved post-training state"""
-        '''if self.trained_state is not None:
-            self.model.load_state_dict(self.trained_state)
-            # Also reset the hidden state
-            self.hidden = torch.zeros(1, 1, self.hidden_size)
-        else:
-            raise ValueError("No trained state found. Please train the model first.")'''
-        
         if self.trained_state is not None:
             self.model.load_state_dict(self.trained_state)
 
@@ -189,7 +314,6 @@ class Bot():
                 self.hidden = torch.zeros(1, 1, self.hidden_size)
         else:
             raise ValueError("No trained state found. Please train the model first.")
-
 
     def print_model_parameters(self):
         for name, param in self.model.named_parameters():
@@ -260,8 +384,6 @@ class RNNAgent(nn.Module):
         
         return action.item()
     
-# File: Training/LSTMAgent.py (or wherever you keep model classes)
-
 class LSTMAgent(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(LSTMAgent, self).__init__()

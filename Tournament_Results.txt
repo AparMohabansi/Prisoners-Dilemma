@@ -1,27 +1,79 @@
 Tournament winners:
-Bot_1 Score: 366
+Bot_1 Score: 784
 Bot_1 Hyperparameters:
 Model Type: RNN
-Hidden Size: 10
-Learning Rate: 0.006195123558716662
-Number of Episodes: 40
-Epsilon: 0.08965095019242535
-Online Learning Rate: 0.18481031985127264
-Memory Size: 20
-Entropy Coefficient: 0.003780145779613469
-Training Agents: ['Random', 'MajorityRule', 'TitForTwoTats']
-Number of Training Agents: 3
+Hidden Size: 26
+Learning Rate: 0.024488370740241513
+Number of Episodes: 49
+Epsilon: 0.06956571338257543
+Online Learning Rate: 0.06981218412805822
+Memory Size: 15
+Entropy Coefficient: 0.0010352949387049826
+Training Agents: ['TwoTitsForTat', 'AlwaysCooperate', 'MajorityRule', 'Opposite', 'Random', 'Pavlov', 'GrimTrigger']
+Number of Training Agents: 7
 ------------------------------
-Bot_2 Score: 271
-Bot_2 Hyperparameters:
+Bot_3 Score: 734
+Bot_3 Hyperparameters:
 Model Type: RNN
+Hidden Size: 28
+Learning Rate: 0.012151334938931477
+Number of Episodes: 36
+Epsilon: 0.19796203046875582
+Online Learning Rate: 0.08433522569693955
+Memory Size: 19
+Entropy Coefficient: 0.006850203896520773
+Training Agents: ['TwoTitsForTat', 'AlwaysDefect', 'MajorityRule', 'Pavlov', 'TitforTat', 'TitForTwoTats', 'GrimTrigger', 'Opposite']
+Number of Training Agents: 8
+------------------------------
+Bot_4 Score: 699
+Bot_4 Hyperparameters:
+Model Type: RNN
+Hidden Size: 8
+Learning Rate: 0.013696644351944252
+Number of Episodes: 24
+Epsilon: 0.0756700981128604
+Online Learning Rate: 0.07986282211495523
+Memory Size: 17
+Entropy Coefficient: 0.004866925135384091
+Training Agents: ['GrimTrigger', 'AlwaysDefect', 'Pavlov', 'TwoTitsForTat', 'MajorityRule', 'Random', 'AlwaysCooperate']
+Number of Training Agents: 7
+------------------------------
+Bot_6 Score: 698
+Bot_6 Hyperparameters:
+Model Type: RNN
+Hidden Size: 14
+Learning Rate: 0.02969672864929044
+Number of Episodes: 37
+Epsilon: 0.08643425304815065
+Online Learning Rate: 0.1867351352930068
+Memory Size: 16
+Entropy Coefficient: 0.002167689095887114
+Training Agents: ['AlwaysCooperate', 'TitforTat', 'GrimTrigger', 'AlwaysDefect']
+Number of Training Agents: 4
+------------------------------
+Bot_2 Score: 469
+Bot_2 Hyperparameters:
+Model Type: LSTM
 Hidden Size: 15
-Learning Rate: 0.02820001279948125
-Number of Episodes: 38
-Epsilon: 0.09194487430408399
-Online Learning Rate: 0.19380070380969236
-Memory Size: 18
-Entropy Coefficient: 0.007400319318515207
-Training Agents: ['AlwaysCooperate', 'MajorityRule', 'Pavlov', 'TitforTat', 'Random', 'TitForTwoTats']
+Learning Rate: 0.013951545042527996
+Number of Episodes: 28
+Epsilon: 0.13390478233742995
+Online Learning Rate: 0.1727141963215319
+Memory Size: 10
+Entropy Coefficient: 0.002213097577955058
+Training Agents: ['MajorityRule', 'TitForTwoTats', 'AlwaysCooperate', 'Pavlov', 'Random', 'TwoTitsForTat', 'Opposite']
+Number of Training Agents: 7
+------------------------------
+Bot_5 Score: 388
+Bot_5 Hyperparameters:
+Model Type: RNN
+Hidden Size: 24
+Learning Rate: 0.03347652911576781
+Number of Episodes: 42
+Epsilon: 0.115844669210345
+Online Learning Rate: 0.051444284137383486
+Memory Size: 10
+Entropy Coefficient: 0.003547190480778556
+Training Agents: ['Pavlov', 'TitforTat', 'Random', 'AlwaysCooperate', 'MajorityRule', 'TitForTwoTats']
 Number of Training Agents: 6
 ------------------------------

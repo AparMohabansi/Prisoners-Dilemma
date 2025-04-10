@@ -1,5 +1,7 @@
 from Training.Bot import Bot
 from Evaluation.Game import Game
+from Evaluation.StatisticsManager import StatisticsManager
+
 from typing import List
 import random
 from tqdm import tqdm
@@ -12,10 +14,30 @@ class Tournament:
         self.scores = {bot: 0 for bot in bots}
 
     def play_match(self, bot1: Bot, bot2: Bot):
+        # Record start of game for statistics
+        bot1.start_new_game()
+        bot2.start_new_game()
+        
+        # Play a game
         game = Game(bot1, bot2, rounds=self.num_rounds)
         game.play_game()
+        
+        # Update scores
         self.scores[bot1] += game.score[0]
         self.scores[bot2] += game.score[1]
+        
+        # Record game result for statistics
+        if game.score[0] > game.score[1]:
+            bot1.end_game('win')
+            bot2.end_game('loss')
+        elif game.score[0] < game.score[1]:
+            bot1.end_game('loss')
+            bot2.end_game('win')
+        else:
+            bot1.end_game('draw')
+            bot2.end_game('draw')
+            
+        # Reset bots to their trained state
         bot1.reset_to_trained_state()
         bot2.reset_to_trained_state()
 
@@ -129,3 +151,21 @@ class Tournament:
         # Return values if not printing
         if not print_winners:
             return [score for _, score in winners]
+
+    def export_tournament_stats(self, output_dir=None):
+        """Export statistics for all bots that participated in the tournament"""
+        
+        # Create statistics manager
+        stats_manager = StatisticsManager(output_dir)
+        
+        # Add all bots to the manager
+        for bot in self.bots:
+            stats_manager.add_bot(bot)
+        
+        # Export statistics to CSV
+        csv_path = stats_manager.export_all_stats()
+        
+        # Generate comparative plots
+        plots_dir = stats_manager.plot_comparative_analysis()
+        
+        return csv_path, plots_dir
