@@ -81,20 +81,51 @@ class Tournament:
         # Print summary
         print("\nTournament completed!")
         print(f"Matches played: {matches_played}")
+        print(f"Rounds played per Game: {self.num_rounds}")
 
     def get_winner(self):
         return max(self.scores.values())
     
-    def get_winners(self, num_winners: int = 1, print_winners: bool = True):
+    def get_winners(self, num_winners: int = 1, print_winners: bool = True, 
+                include_hyperparams: bool = False, output_file: str = None):
+        """
+        Get the top winners of the tournament with option to write to a file.
+        
+        Args:
+            num_winners: Number of top winners to return
+            print_winners: Whether to print the winners to the console
+            include_hyperparams: Whether to print/output hyperparameters of winning bots
+            output_file: Path to file where results should be written (optional)
+        """
+        num_winners = min(num_winners, len(self.scores))
+        winners = sorted(self.scores.items(), key=lambda item: item[1], reverse=True)[:num_winners]
+        
+        # Create output content
+        output_lines = ["Tournament winners:"]
+        for bot, score in winners:
+            output_lines.append(f"{bot.name} Score: {score}")
+            
+            # Add hyperparameters if requested
+            if include_hyperparams:
+                hyperparameters = bot.get_model_hyperparameters()
+                output_lines.append(f"{bot.name} Hyperparameters:")
+                for key, value in hyperparameters.items():
+                    if key != "Name":
+                        output_lines.append(f"{key}: {value}")
+                output_lines.append(f"Number of Training Agents: {len(bot.training_agents)}")
+                output_lines.append("-" * 30)
+        
+        # Print to console if requested
         if print_winners:
-            print("Tournament winners:")
-            for bot, score in sorted(self.scores.items(), key=lambda item: item[1], reverse=True)[:num_winners]:
-                print(f"{bot.name}: {score}")
-        else:
-            return self.scores.values().sort(reverse=True)[:num_winners]
-
-    def set_rounds(self, num_rounds: int):
-        self.num_rounds = num_rounds
-
-    def set_noise(self, noise: float):
-        self.noise = noise
+            for line in output_lines:
+                print(line)
+        
+        # Write to file if path provided
+        if output_file:
+            with open(output_file, 'w') as f:
+                for line in output_lines:
+                    f.write(f"{line}\n")
+        
+        # Return values if not printing
+        if not print_winners:
+            return [score for _, score in winners]

@@ -1,0 +1,27 @@
+Tournament winners:
+Bot_1 Score: 366
+Bot_1 Hyperparameters:
+Model Type: RNN
+Hidden Size: 10
+Learning Rate: 0.006195123558716662
+Number of Episodes: 40
+Epsilon: 0.08965095019242535
+Online Learning Rate: 0.18481031985127264
+Memory Size: 20
+Entropy Coefficient: 0.003780145779613469
+Training Agents: ['Random', 'MajorityRule', 'TitForTwoTats']
+Number of Training Agents: 3
+------------------------------
+Bot_2 Score: 271
+Bot_2 Hyperparameters:
+Model Type: RNN
+Hidden Size: 15
+Learning Rate: 0.02820001279948125
+Number of Episodes: 38
+Epsilon: 0.09194487430408399
+Online Learning Rate: 0.19380070380969236
+Memory Size: 18
+Entropy Coefficient: 0.007400319318515207
+Training Agents: ['AlwaysCooperate', 'MajorityRule', 'Pavlov', 'TitforTat', 'Random', 'TitForTwoTats']
+Number of Training Agents: 6
+------------------------------

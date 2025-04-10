@@ -45,13 +45,18 @@ def main():
     # game.play_game()
     # game.print_scores()
 
-    output = False
-    factory = Factory(output=output)
-    bots = factory.create_bots(num_bots=200)
+    print_debug_output = False
+    number_of_bots = 200
+    number_of_rounds = 200
+    number_of_games = 10
+    output_file = "Tournament_Results.txt"
 
-    tournament = Tournament(bots = bots, num_rounds = 200, num_games = 10)
+    factory = Factory(output=print_debug_output)
+    bots = factory.create_bots(num_bots=number_of_bots)
+
+    tournament = Tournament(bots = bots, num_rounds = number_of_rounds, num_games = number_of_games)
     tournament.run_tournament()
-    tournament.get_winners(10, print_winners=True)
+    tournament.get_winners(20, print_winners=True, include_hyperparams=True, output_file=output_file)
 
 
 if __name__ == "__main__":

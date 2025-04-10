@@ -24,8 +24,8 @@ class Factory:
                     memory_size_range=(10, 20),
                     entropy_coef_range=(0.001, 0.01),
                     model_types=["RNN", "LSTM"],
-                    min_agents=3,  # Minimum number of agents to train against
-                    max_agents=8): # Maximum number of agents to train against
+                    min_agents=3,
+                    max_agents=8):
         """
         Create bots with randomized parameters within specified ranges
         
@@ -39,6 +39,8 @@ class Factory:
             memory_size_range: Range for memory size (min, max)
             entropy_coef_range: Range for entropy coefficient (min, max)
             model_type: Type of model to use ("RNN" or "LSTM")
+            min_agents: Minimum number of agents to train against
+            max_agents: Maximum number of agents to train against
         
         Returns:
             List of trained bots
@@ -81,6 +83,7 @@ class Factory:
             # Choose a random number of agents from the pool
             num_agents = random.randint(min_agents, min(max_agents, len(agent_pool)))
             agents = random.sample(agent_pool, num_agents)
+            bot.training_agents = [agent.__class__.__name__ for agent in agents]
             
             if self.output:
                 print(f"\nTraining {bot_name} against {num_agents} agents:")

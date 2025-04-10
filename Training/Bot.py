@@ -14,27 +14,26 @@ class Bot():
                  output: bool = True, 
                  verbose: bool = False):
         # Constants
-        self.name = name
         self.input_size = 2  # [self_action, opponent_moves]
         self.output_size = 2  # [Cooperate, Defect]
 
         # Hyperparameters for the model
+        self.name = name
         self.hidden_size = hidden_size  # Hidden layer size
+        self.model_type = model_type.upper()
 
         # Hyperparameters for training
         self.learning_rate = 0.01  # Learning rate during gym training
         self.num_episodes = 200  # Number of rounds
         self.epsilon = 0.1  # Epsilon for epsilon-greedy exploration
+        self.training_agents = []  # List of the names of training agents (for reference, no functionality)
 
         # Hyperparameters for online learning
         self.learning_rate_online = 0.1  # Learning rate for online learning
         self.memory_size = 15  # Memory size for online learning
         self.entropy_coef = 0.005  # Entropy coefficient for exploration during online learning
 
-        # ⬇️ NEW: Save model type
-        self.model_type = model_type.upper()
-
-        # ⬇️ NEW: Initialize model and hidden state based on type
+        # Initialize model and hidden state based on type
         if self.model_type == "LSTM":
             self.model = LSTMAgent(self.input_size, self.hidden_size, self.output_size)
             self.hidden = (
@@ -48,10 +47,6 @@ class Bot():
 
 
         # Data structures
-        #self.model = RNNAgent(self.input_size, self.hidden_size, self.output_size)
-        #self.hidden = torch.zeros(1, 1, self.hidden_size)  # Initialize hidden state
-        
-        
         self.state = torch.tensor([[1, 1]], dtype=torch.float32)  # Initial state
         self.trained_state = None  # For storing the post-training weights
         self.memory = []  # For storing experiences
@@ -203,6 +198,31 @@ class Bot():
                 print(f"Weights/Bias: {param.data}")
                 print(f"Shape: {param.shape}")
                 print("-" * 30)
+    
+    def get_model_hyperparameters(self):
+        hyperparameters = {
+            "Name": self.name,
+            "Model Type": self.model_type,
+            "Hidden Size": self.hidden_size,
+            "Learning Rate": self.learning_rate,
+            "Number of Episodes": self.num_episodes,
+            "Epsilon": self.epsilon,
+            "Online Learning Rate": self.learning_rate_online,
+            "Memory Size": self.memory_size,
+            "Entropy Coefficient": self.entropy_coef,
+            "Training Agents": self.training_agents
+        }
+        return hyperparameters
+    
+    def pretty_print_model_hyperparameters(self):
+        hyperparameters = self.get_model_hyperparameters()
+        print(f"{self.name} Hyperparameters:")
+        for key, value in hyperparameters.items():
+            if key != "Name":
+                print(f"{key}: {value}")
+        print(f"Number of Training Agents: {len(self.training_agents)}")
+        print("-" * 30)
+        
 
 class RNNAgent(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
