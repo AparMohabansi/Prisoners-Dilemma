@@ -99,9 +99,6 @@ class StatisticsManager:
         plt.subplot(1, 3, 1)
         scatter1 = plt.scatter(cooperation_rates, avg_scores, 
                              c=win_rates, s=80, alpha=0.7, cmap='viridis')
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (cooperation_rates[i], avg_scores[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
         plt.colorbar(scatter1, label='Win Rate')
         plt.xlabel('Cooperation Rate')
         plt.ylabel('Average Score per Game')
@@ -112,9 +109,6 @@ class StatisticsManager:
         plt.subplot(1, 3, 2)
         scatter2 = plt.scatter(retaliation_rates, avg_scores, 
                              c=win_rates, s=80, alpha=0.7, cmap='viridis')
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (retaliation_rates[i], avg_scores[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
         plt.colorbar(scatter2, label='Win Rate')
         plt.xlabel('Retaliation Rate')
         plt.ylabel('Average Score per Game')
@@ -125,9 +119,6 @@ class StatisticsManager:
         plt.subplot(1, 3, 3)
         scatter3 = plt.scatter(forgiveness_rates, avg_scores, 
                              c=win_rates, s=80, alpha=0.7, cmap='viridis')
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (forgiveness_rates[i], avg_scores[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
         plt.colorbar(scatter3, label='Win Rate')
         plt.xlabel('Forgiveness Rate')
         plt.ylabel('Average Score per Game')
@@ -146,10 +137,6 @@ class StatisticsManager:
         
         scatter = plt.scatter(balance_index, avg_scores, c=[0 if t == "RNN" else 1 for t in model_types],
                             s=100, alpha=0.7, cmap='coolwarm')
-        
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (balance_index[i], avg_scores[i]), 
-                       textcoords="offset points", xytext=(0,10), ha='center')
         
         plt.colorbar(scatter, ticks=[0.25, 0.75], label='Model Type').set_ticklabels(['RNN', 'LSTM'])
         plt.xlabel('Strategy Balance Index ((cooperation + forgiveness - retaliation)/3)')
@@ -170,10 +157,6 @@ class StatisticsManager:
         scatter1 = plt.scatter(num_training_agents, avg_scores, 
                               c=[0 if t == "RNN" else 1 for t in model_types],
                               s=80, alpha=0.7, cmap='coolwarm')
-        
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (num_training_agents[i], avg_scores[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
             
         plt.xlabel('Number of Training Agents')
         plt.ylabel('Average Score per Game')
@@ -185,10 +168,6 @@ class StatisticsManager:
         scatter2 = plt.scatter(epsilons, avg_scores, 
                               c=entropy_coefficients, 
                               s=80, alpha=0.7, cmap='plasma')
-        
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (epsilons[i], avg_scores[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
             
         plt.colorbar(scatter2, label='Entropy Coefficient')
         plt.xlabel('Exploration (Epsilon)')
@@ -205,10 +184,6 @@ class StatisticsManager:
         plt.figure(figsize=(10, 6))
         scatter = plt.scatter(avg_scores, score_variances, 
                              c=win_rates, s=100, alpha=0.7, cmap='RdYlGn')
-        
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (avg_scores[i], score_variances[i]), 
-                       textcoords="offset points", xytext=(0,10), ha='center')
             
         plt.colorbar(scatter, label='Win Rate')
         plt.xlabel('Average Score per Game')
@@ -232,10 +207,6 @@ class StatisticsManager:
                        [avg_scores[i] for i in indices], 
                        label=model_type, alpha=0.7, s=80)
             
-            for i in indices:
-                plt.annotate(bot_names[i], (hidden_sizes[i], avg_scores[i]), 
-                            textcoords="offset points", xytext=(0,10), ha='center')
-                
         plt.xlabel('Hidden Size')
         plt.ylabel('Average Score per Game')
         plt.title('Model Architecture Performance')
@@ -244,12 +215,8 @@ class StatisticsManager:
         
         # Right plot - Memory Size vs Score
         plt.subplot(1, 2, 2)
-        scatter = plt.scatter(memory_sizes, avg_points_per_round, 
+        scatter = plt.scatter(memory_sizes, avg_scores, 
                              c=learning_rates, s=80, alpha=0.7, cmap='viridis')
-        
-        for i, name in enumerate(bot_names):
-            plt.annotate(name, (memory_sizes[i], avg_points_per_round[i]), 
-                        textcoords="offset points", xytext=(0,10), ha='center')
             
         plt.colorbar(scatter, label='Learning Rate')
         plt.xlabel('Memory Size')

@@ -14,8 +14,8 @@ from Evaluation.Factory import Factory
 
 def main():
     print_debug_output = False
-    number_of_bots = 6
-    number_of_rounds = 40
+    number_of_bots = 500
+    number_of_rounds = 100
     number_of_games = 10
     output_file = "Tournament_Results.txt"
     stats_output_dir = os.path.join(os.getcwd(), "tournament_stats")
