@@ -33,7 +33,7 @@ git clone https://github.com/AparMohabansi/Prisoners-Dilemma.git
 cd Prisoners-Dilemma
 ```
 
-Install any required packages (if applicable):
+Install any required packages:
 ```bash
 pip install -r requirements.txt
 ```
